@@ -3,10 +3,9 @@ import 'source-map-support/register'
 
 import { verify, decode } from 'jsonwebtoken'
 import { createLogger } from '../../utils/logger'
-import Axios from 'axios'
 import { Jwt } from '../../auth/Jwt'
 import { JwtPayload } from '../../auth/JwtPayload'
-
+import * as JwksRsa from "jwks-rsa";
 const logger = createLogger('auth')
 
 // DONE: Provide a URL that can be used to download a certificate that can be used
