@@ -10,7 +10,7 @@ import {CreateTodoResponse} from "../../responses/CreateTodoResponse";
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
       const newTodo: CreateTodoRequest = JSON.parse(event.body)
-      // TODO DONE: Implement creating a new TODO item
+      // TODO: Implement creating a new TODO item - DONE
       const createdTodo = await createTodo(newTodo, event)
       return {
           statusCode: 201,
