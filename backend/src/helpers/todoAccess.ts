@@ -4,22 +4,21 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { createLogger } from '../utils/logger'
 import { TodoItem as Todo} from '../models/TodoItem'
 import { TodoUpdate } from '../models/TodoUpdate';
+import {getSignedUrl} from "./attachmentUtils";
 
 const XAWS = AWSXRay.captureAWS(AWS)
 
 const logger = createLogger('TodosAccess')
 
 // TODO: Implement the dataLayer logic - DONE
-const s3 = new XAWS.S3({
-    signatureVersion: 'v4'
-})
 
 export class TodoAccess {
 
     constructor(
         private readonly docClient: DocumentClient = createDynamoDBClient(),
         private readonly todosTable = process.env.TODOS_TABLE,
-        private readonly signedUrlExpiration = process.env.SIGNED_URL_EXPIRATION) {
+        private readonly bucketName = process.env.ATTACHMENT_S3_BUCKET,
+        ) {
     }
 
     async getTodosForUser(id:string): Promise<Todo[]> {
@@ -64,6 +63,7 @@ export class TodoAccess {
 
         return todo
     }
+
     async attachImageToTodo(todo: Todo): Promise<Todo> {
         await this.docClient.put({
             TableName: this.todosTable,
@@ -72,19 +72,13 @@ export class TodoAccess {
 
         return todo
     }
-    async createAttachmentUrl(id: string) {
-        await this.attachImageToTodo({todoId:id} as Todo)
-        return await this.getSignedUrl(id)
-    }
-    async getSignedUrl(todoId: string) {
-        return await s3.getSignedUrl('putObject', {
-            Bucket: process.env.TO,
-            Key: todoId,
-            Expires: this.signedUrlExpiration
-        })
-    }
-}
 
+    async createAttachmentUrl(id: string) {
+        await this.attachImageToTodo({todoId:id, attachmentUrl: `https://${this.bucketName}.s3.amazonaws.com/${id}`} as Todo)
+        return await getSignedUrl(id)
+    }
+
+}
 
 function createDynamoDBClient() {
     if (process.env.IS_OFFLINE) {
