@@ -4,7 +4,7 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 
 const XAWS = AWSXRay.captureAWS(AWS)
 
-import { TodoItem } from '../models/TodoItem'
+import { TodoItem as Todo} from '../models/TodoItem'
 
 export class TodoAccess {
 
@@ -13,7 +13,7 @@ export class TodoAccess {
         private readonly todosTable = process.env.TodosTable) {
     }
 
-    async getTodosForUser(id:string): Promise<TodoItem[]> {
+    async getTodosForUser(id:string): Promise<Todo[]> {
         console.log('Getting all todos for current user')
 
         const result = await this.docClient.scan({
@@ -26,8 +26,18 @@ export class TodoAccess {
         }).promise()
 
         const items = result.Items
-        return items as TodoItem[]
+        return items as Todo[]
     }
+
+    async createTodo(todo: Todo): Promise<Todo> {
+        await this.docClient.put({
+            TableName: this.todosTable,
+            Item: todo
+        }).promise()
+
+        return todo
+    }
+
 }
 
 function createDynamoDBClient() {
