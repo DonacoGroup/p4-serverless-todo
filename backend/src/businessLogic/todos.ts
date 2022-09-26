@@ -45,3 +45,10 @@ export async function updateTodo(
         done: updateTodoRequest.done,
     } as Todo)
 }
+
+export async function deleteTodo(id:string): Promise<Todo> {
+
+    return await todoAccess.deleteTodo({
+        todoId: id,
+    } as Todo)
+}
