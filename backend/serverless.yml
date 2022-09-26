@@ -1,5 +1,5 @@
-# TODO: Change the name of the org 
-org: sudkul
+# TODO: Change the name of the org - DONE
+org: donacosarl
 app: serverless-todo-app
 service: serverless-todo-app
 
