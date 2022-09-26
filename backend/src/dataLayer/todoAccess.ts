@@ -38,6 +38,15 @@ export class TodoAccess {
         return todo
     }
 
+    async updateTodo(todo: Todo): Promise<Todo> {
+        await this.docClient.put({
+            TableName: this.todosTable,
+            Item: todo
+        }).promise()
+
+        return todo
+    }
+
 }
 
 function createDynamoDBClient() {

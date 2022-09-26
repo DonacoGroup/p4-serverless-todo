@@ -4,6 +4,7 @@ import { TodoItem as Todo } from '../models/TodoItem'
 import {CreateTodoRequest} from "../requests/CreateTodoRequest";
 import {getUserId} from "../lambda/utils";
 import {APIGatewayProxyEvent} from "aws-lambda";
+import {UpdateTodoRequest} from "../requests/UpdateTodoRequest";
 
 const todoAccess = new TodoAccess()
 
@@ -28,4 +29,19 @@ export async function createTodo(
         attachmentUrl: createTodoRequest.attachmentUrl,
         createdAt: new Date().toISOString()
     })
+}
+
+export async function updateTodo(
+    id:string,
+    updateTodoRequest: UpdateTodoRequest,
+    userId:string
+): Promise<Todo> {
+
+    return await todoAccess.updateTodo({
+        todoId: id,
+        userId: userId,
+        name: updateTodoRequest.name,
+        dueDate: updateTodoRequest.dueDate,
+        done: updateTodoRequest.done,
+    } as Todo)
 }
