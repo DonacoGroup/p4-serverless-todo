@@ -3,14 +3,17 @@ import * as AWSXRay from 'aws-xray-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 
 const XAWS = AWSXRay.captureAWS(AWS)
-
+const s3 = new XAWS.S3({
+    signatureVersion: 'v4'
+})
 import { TodoItem as Todo} from '../models/TodoItem'
 
 export class TodoAccess {
 
     constructor(
         private readonly docClient: DocumentClient = createDynamoDBClient(),
-        private readonly todosTable = process.env.TodosTable) {
+        private readonly todosTable = process.env.TODOS_TABLE,
+        private readonly signedUrlExpiration = process.env.SIGNED_URL_EXPIRATION) {
     }
 
     async getTodosForUser(id:string): Promise<Todo[]> {
@@ -55,8 +58,27 @@ export class TodoAccess {
 
         return todo
     }
+    async attachImageToTodo(todo: Todo): Promise<Todo> {
+        await this.docClient.put({
+            TableName: this.todosTable,
+            Item: todo
+        }).promise()
 
+        return todo
+    }
+    async createAttachmentUrl(id: string) {
+        await this.attachImageToTodo({todoId:id} as Todo)
+        return await this.getSignedUrl(id)
+    }
+    async getSignedUrl(todoId: string) {
+        return await s3.getSignedUrl('putObject', {
+            Bucket: process.env.TO,
+            Key: todoId,
+            Expires: this.signedUrlExpiration
+        })
+    }
 }
+
 
 function createDynamoDBClient() {
     if (process.env.IS_OFFLINE) {
