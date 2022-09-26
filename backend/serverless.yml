@@ -58,9 +58,9 @@ functions:
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
-          Action:
-            - dynamodb:ScanItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
   # TODO: Configure this function  - DONE
   # Provide iamRoleStatements property. Decide the Actions and AWS Resource. 
@@ -79,9 +79,9 @@ functions:
               application/json: ${file(models/create-todo-model.json)}
     iamRoleStatements:
       - Effect: Allow
-          Action:
-            - dynamodb:PutItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
   # TODO: Configure this function - DONE
   # Provide property for setting up CORS, Authorizer, iamRoleStatements, and request schemas
   UpdateTodo:
@@ -97,9 +97,9 @@ functions:
               application/json: ${file(models/update-todo-model.json)}
     iamRoleStatements:
       - Effect: Allow
-          Action:
-            - dynamodb:PutItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
   # TODO: Configure this function - DONE
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
   DeleteTodo:
@@ -112,9 +112,9 @@ functions:
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
-          Action:
-            - dynamodb:DeleteItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Action:
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
   # TODO: Configure this function - DONE
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
@@ -128,9 +128,9 @@ functions:
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
-          Action:
-            - dynamodb:PutItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
 
 resources:
