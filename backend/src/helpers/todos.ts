@@ -10,7 +10,9 @@ import {APIGatewayProxyEvent} from "aws-lambda";
 import {getUserId} from "../lambda/utils";
 
 // TODO: Implement businessLogic - DONE
+const logger = createLogger('helpers.todos')
 const todoAccess = new TodoAccess()
+const attachmentUtils = new AttachmentUtils()
 
 export async function getTodosForUser(id:string): Promise<Todo[]> {
     return todoAccess.getTodosForUser(id)
@@ -58,5 +60,15 @@ export async function deleteTodo(id:string): Promise<Todo> {
 }
 
 export async function createAttachmentPresignedUrl(id:string) {
-    return await todoAccess.createAttachmentUrl(id)
+    const todoExist = await todoAccess.todoExists(id)
+    if(!todoExist){
+        logger.error('Failed to return presigned url because todo not found',{
+            todoId: id
+        })
+        return new createError.NotFound()
+    }
+    logger.info('Presigned Url is successfully returned for this todo',{
+        todoId: id
+    })
+    return await attachmentUtils.createAttachmentUrl(id)
 }

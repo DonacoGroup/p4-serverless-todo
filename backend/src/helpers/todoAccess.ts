@@ -4,7 +4,6 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { createLogger } from '../utils/logger'
 import { TodoItem as Todo} from '../models/TodoItem'
 import { TodoUpdate } from '../models/TodoUpdate';
-import {getSignedUrl} from "./attachmentUtils";
 
 const XAWS = AWSXRay.captureAWS(AWS)
 
@@ -18,23 +17,32 @@ export class TodoAccess {
         private readonly docClient: DocumentClient = createDynamoDBClient(),
         private readonly todosTable = process.env.TODOS_TABLE,
         private readonly createdAtIndex = process.env.TODOS_CREATED_AT_INDEX,
-        private readonly bucketName = process.env.ATTACHMENT_S3_BUCKET,
         ) {
     }
 
     async getTodosForUser(id:string): Promise<Todo[]> {
 
-        const result = await this.docClient.query({
-            TableName: this.todosTable,
-            IndexName: this.createdAtIndex,
-            KeyConditionExpression: "partionKey , :userId",
-            ExpressionAttributeValues: {
-                ":userId": id,
-            },
-        }).promise()
+        try{
+            const result = await this.docClient.query({
+                TableName: this.todosTable,
+                IndexName: this.createdAtIndex,
+                KeyConditionExpression: "partionKey , :userId",
+                ExpressionAttributeValues: {
+                    ":userId": id,
+                },
+            }).promise()
 
-        const items = result.Items
-        return items as Todo[]
+            const items = result.Items
+            logger.info('Todos for user successfully returned',{
+                method:'getTodosForUser',
+                userId:id
+            })
+            return items as Todo[]
+        }
+        catch (e) {
+
+        }
+        
     }
 
     async createTodo(todo: Todo): Promise<Todo> {
@@ -69,25 +77,22 @@ export class TodoAccess {
             TableName: this.todosTable,
             Item: todo
         }).promise()
-
         return todo
     }
+    async todoExists(todoId: string) {
+        const result = await this.docClient
+            .get({
+                TableName: this.todosTable,
+                Key: {
+                    id: todoId
+                }
+            })
+            .promise()
 
-    async createAttachmentUrl(id: string) {
-        await this.attachImageToTodo({todoId:id, attachmentUrl: `https://${this.bucketName}.s3.amazonaws.com/${id}`} as Todo)
-        return await getSignedUrl(id)
+        return !!result.Item
     }
-
 }
 
 function createDynamoDBClient() {
-    if (process.env.IS_OFFLINE) {
-        console.log('Creating a local DynamoDB instance')
-        return new XAWS.DynamoDB.DocumentClient({
-            region: 'localhost',
-            endpoint: 'http://localhost:8000'
-        })
-    }
-
     return new XAWS.DynamoDB.DocumentClient()
 }

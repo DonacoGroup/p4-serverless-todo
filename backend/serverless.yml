@@ -1,6 +1,4 @@
 # TODO: Change the name of the org - DONE
-org: donacosarl
-app: serverless-todo-app
 service: serverless-todo-app
 
 plugins:
@@ -27,27 +25,31 @@ provider:
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
     ATTACHMENT_S3_BUCKET: serverless-c4-todo-images-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
+    SLS_DEBUG: "*"
 
   logs:
     # Enable API Gateway logs
     restApi: true
 
-  iam:
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - xray:PutTelemetryRecords
-            - xray:PutTraceSegments
-          Resource: "*"
-        - Effect: Allow
-          Action:
-            - dynamodb:Scan
-            - dynamodb:Query
-            - dynamodb:PutItem
-            - dynamodb:GetItem
-            - dynamodb:DeleteItem
-          Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - codedeploy:*
+      Resource:
+        - '*'
+    - Effect: Allow
+      Action:
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:DeleteItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
 
 functions:
@@ -175,7 +177,7 @@ resources:
           - AttributeName: todoId
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.GROUPS_TABLE}
+        TableName: ${self:provider.environment.TODOS_TABLE}
         LocalSecondaryIndexes:
           - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
             KeySchema:
@@ -188,7 +190,7 @@ resources:
 
     # TODO: Complete the bucket properties below. - DONE
     # Do not forget to add the CorsConfiguration propoerty
-    AttachmentsBucket:
+    AttachmentsBucket13:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.ATTACHMENT_S3_BUCKET}
@@ -207,7 +209,7 @@ resources:
               MaxAge: 3000
 
     # TODO: Complete the policy below and attach it to the bucket defined above. - DONE
-    # For cross referencing the name of the bucket, use "!Ref AttachmentsBucket"
+    # For cross referencing the name of the bucket, use "!Ref AttachmentsBucket13"
     BucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
@@ -220,4 +222,4 @@ resources:
               Principal: '*'
               Action: 's3:GetObject'
               Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'
-        Bucket: !Ref AttachmentsBucket
+        Bucket: !Ref AttachmentsBucket13
