@@ -52,12 +52,26 @@ export class TodoAccess {
     }
 
     async createTodo(todo: Todo): Promise<Todo> {
-        await this.docClient.put({
-            TableName: this.todosTable,
-            Item: todo
-        }).promise()
+        try{
+            await this.docClient.put({
+                TableName: this.todosTable,
+                Item: todo
+            }).promise()
+            logger.info(`createTodo succeeded`,{
+                method:'createTodo',
+                todo: todo
+            })
+            return todo
+        }
+        catch (e) {
+            logger.error('createTodo failed',{
+                method:'createTodo',
+                todo:todo,
+                error: e
+            })
+            return {} as Todo
+        }
 
-        return todo
     }
 
     async updateTodo(todo: Todo): Promise<Todo> {

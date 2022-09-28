@@ -17,8 +17,6 @@ provider:
   tracing:
     lambda: true
     apiGateway: true
-    dynamodb: true
-    s3: true
 
   # Use these variables in the functions and resouorces section below. For example, 
   # ${self:provider.environment.ATTACHMENT_S3_BUCKET}
@@ -104,6 +102,7 @@ functions:
         Action:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+
   # TODO: Configure this function - DONE
   # Provide property for setting up CORS, Authorizer, iamRoleStatements, and request schemas
   UpdateTodo:
