@@ -26,7 +26,7 @@ export class TodoAccess {
             const result = await this.docClient.query({
                 TableName: this.todosTable,
                 IndexName: this.createdAtIndex,
-                KeyConditionExpression: "partionKey , :userId",
+                KeyConditionExpression: "userId = :userId",
                 ExpressionAttributeValues: {
                     ":userId": id,
                 },
@@ -35,12 +35,18 @@ export class TodoAccess {
             const items = result.Items
             logger.info('Todos for user successfully returned',{
                 method:'getTodosForUser',
-                userId:id
+                userId:id,
+                items: items
             })
             return items as Todo[]
         }
         catch (e) {
-
+            logger.error('Todos for user failed',{
+                method:'getTodosForUser',
+                userId:id,
+                error: e
+            })
+            return []
         }
         
     }
@@ -64,32 +70,91 @@ export class TodoAccess {
     }
 
     async deleteTodo(todo: Todo): Promise<Todo> {
-        await this.docClient.delete({
-            TableName: this.todosTable,
-            Key: todo
-        }).promise()
+        try{
+            await this.docClient.delete({
+                TableName: this.todosTable,
+                Key: todo
+            }).promise()
+            logger.info('Todos for user successfully deleted',{
+                method:'deleteTodo',
+                todo: todo
+            })
+            return todo
+        }
+        catch(e) {
+            logger.error(`Todos for user failed ${todo}`,{
+                method:'deleteTodo',
+                todo: todo,
+                error: e
+            })
+            return {} as Todo
+        }
 
-        return todo
     }
 
     async attachImageToTodo(todo: Todo): Promise<Todo> {
-        await this.docClient.put({
-            TableName: this.todosTable,
-            Item: todo
-        }).promise()
-        return todo
-    }
-    async todoExists(todoId: string) {
-        const result = await this.docClient
-            .get({
+        try{
+            await this.docClient.update({
                 TableName: this.todosTable,
-                Key: {
-                    id: todoId
+                Key: {todoId:todo.todoId, userId:todo.userId},
+                UpdateExpression: 'set #url = :url',
+                ExpressionAttributeNames: {
+                    '#url' : 'attachmentUrl',
+                },
+                ExpressionAttributeValues: {
+                    ':url' : todo.attachmentUrl,
                 }
+            }).promise()
+            logger.info(`attachImageToTodo for todo ${todo} succeeded`,{
+                method:'attachImageToTodo',
+                todo: todo
             })
-            .promise()
+            return todo
+        }
+        catch (e) {
+            logger.error(`attachImageToTodo for todo ${todo} failed`,{
+                method:'attachImageToTodo',
+                todo: todo,
+                error: e
+            })
+            return {} as Todo
+        }
 
-        return !!result.Item
+    }
+    async todoExists(todoId: string, userId:string) {
+        try{
+            logger.info('Todos for user exist? before',{
+                method:'todoExists',
+                todo: todoId,
+                userId: userId,
+            })
+            const result = await this.docClient
+                .get({
+                    TableName: this.todosTable,
+                    Key: {
+                        todoId,
+                        userId
+                    }
+                })
+                .promise()
+            logger.info('Todos for user exist?',{
+                method:'todoExists',
+                todo: todoId,
+                userId: userId,
+                result:!!result.Item
+            })
+            return !!result.Item
+        }
+        catch(e){
+            logger.error(`Todos for user failed ${todoId} ${userId}`,{
+                method:'todoExists',
+                todo: todoId,
+                userId: userId,
+                error: e
+            })
+            return false
+        }
+
     }
 }
 

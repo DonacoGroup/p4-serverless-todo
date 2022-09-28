@@ -15,7 +15,7 @@ const todoAccess = new TodoAccess()
 const attachmentUtils = new AttachmentUtils()
 
 export async function getTodosForUser(id:string): Promise<Todo[]> {
-    return todoAccess.getTodosForUser(id)
+    return await todoAccess.getTodosForUser(id)
 }
 
 export async function createTodo(
@@ -52,23 +52,26 @@ export async function updateTodo(
     } as Todo)
 }
 
-export async function deleteTodo(id:string): Promise<Todo> {
-
+export async function deleteTodo(id:string, event: APIGatewayProxyEvent): Promise<Todo> {
+    const userId = getUserId(event)
     return await todoAccess.deleteTodo({
         todoId: id,
+        userId
     } as Todo)
 }
 
-export async function createAttachmentPresignedUrl(id:string) {
-    const todoExist = await todoAccess.todoExists(id)
+export async function createAttachmentPresignedUrl(todoId:string, event: APIGatewayProxyEvent) {
+    const userId = getUserId(event)
+
+    const todoExist = await todoAccess.todoExists(todoId, userId)
     if(!todoExist){
         logger.error('Failed to return presigned url because todo not found',{
-            todoId: id
+            todoId: todoId
         })
         return new createError.NotFound()
     }
-    logger.info('Presigned Url is successfully returned for this todo',{
-        todoId: id
+    logger.info('Presigned Url will probabily returned for this todo',{
+        todoId: todoId
     })
-    return await attachmentUtils.createAttachmentUrl(id)
+    return await attachmentUtils.createAttachmentUrl({userId, todoId} as Todo)
 }

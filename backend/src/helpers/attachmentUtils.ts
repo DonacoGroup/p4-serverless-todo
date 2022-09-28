@@ -15,15 +15,16 @@ export class AttachmentUtils {
 
     async getSignedUrl(todoId: string) {
         return await this.s3.getSignedUrl('putObject', {
-            Bucket: process.env.TO,
+            Bucket: process.env.ATTACHMENT_S3_BUCKET,
             Key: todoId,
             Expires: this.signedUrlExpiration
         })
     }
-    async createAttachmentUrl(id: string) {
+    async createAttachmentUrl(todo: Todo) {
         const todoAccess = new TodoAccess()
-        await todoAccess.attachImageToTodo({todoId:id, attachmentUrl: `https://${this.bucketName}.s3.amazonaws.com/${id}`} as Todo)
-        return await this.getSignedUrl(id)
+        todo.attachmentUrl = `https://${this.bucketName}.s3.amazonaws.com/${todo.todoId}`
+        await todoAccess.attachImageToTodo(todo)
+        return await this.getSignedUrl(todo.todoId)
     }
 }
 
